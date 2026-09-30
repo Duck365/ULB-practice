@@ -6,6 +6,12 @@
     <title>Undertale: Last Breath Practice</title>
     <style>
         /* Base Reset & Styling */
+        @font-face {
+            font-family: 'Udtale';
+            /* If you have a specific Undertale font file, link it here. Using monospace as fallback */
+            src: local('Courier New'); 
+        }
+
         body, html {
             margin: 0;
             padding: 0;
@@ -13,184 +19,221 @@
             height: 100%;
             background-color: black;
             color: white;
-            font-family: 'Courier New', Courier, monospace; 
+            font-family: 'Udtale', 'Courier New', Courier, monospace; 
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+            user-select: none;
         }
 
-        /* Menu Screen Configuration */
-        #menu-container {
-            display: flex;
+        /* --- SCREEN CONTAINERS --- */
+        .screen {
+            display: none;
+            width: 800px;
+            height: 600px;
+            position: relative;
             flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 60px;
         }
 
-        h1 {
-            font-size: 2.5rem;
+        .active {
+            display: flex;
+        }
+
+        /* --- MENU SCREEN --- */
+        #menu-screen h1 {
+            font-size: 2rem;
             letter-spacing: 2px;
-            margin: 0;
-            text-transform: uppercase;
+            margin-bottom: 50px;
         }
+        
+        .title-red { color: #ff0000; }
+        .title-white { color: #ffffff; }
 
-        .text-red {
-            color: red;
-        }
-
-        .text-white {
-            color: white;
-        }
-
-        /* Simplified Button */
-        #start-btn {
-            background-color: black;
-            color: yellow;
+        .start-btn {
             border: 2px solid white;
-            padding: 12px 50px;
+            padding: 10px 40px;
+            color: #ffff00;
             font-size: 1.5rem;
-            font-family: 'Courier New', Courier, monospace;
-            cursor: pointer;
             text-transform: uppercase;
-            transition: border-color 0.2s;
         }
 
-        #start-btn:hover {
-            border-color: yellow;
+        /* --- CONTROLS SCREEN --- */
+        #controls-screen {
+            text-align: center;
+            line-height: 2.5;
         }
 
-        /* Battle Scene Configuration */
-        #battle-scene {
-            display: none; 
-            width: 100%;
-            height: 100%;
+        #controls-screen h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .controls-text {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+
+        .controls-subtext {
+            font-size: 1rem;
+            color: #888;
+            margin-top: 40px;
+        }
+
+        /* --- BATTLE SCREEN --- */
+        #battle-screen {
+            justify-content: flex-end;
+            padding-bottom: 30px;
+            box-sizing: border-box;
+        }
+
+        .dialogue-box {
+            width: 90%;
+            height: 150px;
+            border: 4px solid white;
+            margin-bottom: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .stats-row {
+            width: 90%;
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .hp-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .hp-label { color: white; }
+        .hp-bar-bg {
+            width: 60px;
+            height: 20px;
+            background-color: #ff0000;
             position: relative;
         }
-
-        canvas {
-            display: block;
-            margin: 0 auto;
-            background-color: black;
-            /* Scale canvas to fit screen while maintaining aspect ratio */
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        /* Peeking Image Element */
-        #attacker-img {
+        .hp-bar-fill {
+            width: 100%;
+            height: 100%;
+            background-color: #ffff00;
             position: absolute;
-            right: -60px; /* Pulls the image partially off-screen */
-            top: 50%;
-            transform: translateY(-50%);
-            width: 250px; 
-            display: none;
-            z-index: 10;
+            top: 0;
+            left: 0;
         }
+
+        .action-buttons {
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-action {
+            border: 3px solid #ff9900;
+            color: #ff9900;
+            padding: 10px 0;
+            width: 22%;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .btn-action.active-btn {
+            color: #ffff00;
+            border-color: #ffff00;
+        }
+
     </style>
 </head>
 <body>
 
-    <!-- Main Menu[cite: 2] -->
-    <div id="menu-container">
-        <h1><span class="text-red">Undertale: Last Breath</span> <span class="text-white">Practice</span></h1>
-        <button id="start-btn">Start</button>
+    <!-- SCREEN 1: MAIN MENU -->
+    <div id="menu-screen" class="screen active">
+        <h1><span class="title-red">UNDERTALE: LAST BREATH</span> <span class="title-white">PRACTICE</span></h1>
+        <div class="start-btn">START</div>
     </div>
 
-    <!-- Battle Execution Screen -->
-    <div id="battle-scene">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <img id="attacker-img" src="Attacker.jpeg" alt="Peeking Attacker">
+    <!-- SCREEN 2: CONTROLS -->
+    <div id="controls-screen" class="screen">
+        <h2>CONTROLS</h2>
+        <div class="controls-text">ARROW KEYS = MOVE / NAVIGATE</div>
+        <div class="controls-text">Z / ENTER = SELECT</div>
+        <div class="controls-text">X / SHIFT = DESELECT / BACK</div>
+        <div class="controls-subtext">(Press X or SHIFT to return)</div>
+    </div>
+
+    <!-- SCREEN 3: BATTLE UI -->
+    <div id="battle-screen" class="screen">
+        
+        <div class="dialogue-box">
+            * Smells like a 90 degree angle.
+        </div>
+
+        <div class="stats-row">
+            <div>PLAYER &nbsp;&nbsp; LV 19</div>
+            <div class="hp-bar-container">
+                <span class="hp-label">HP</span>
+                <div class="hp-bar-bg">
+                    <div class="hp-bar-fill"></div>
+                </div>
+                <span>92 / 92</span>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <div class="btn-action active-btn">FIGHT</div>
+            <div class="btn-action">ACT</div>
+            <div class="btn-action">ITEM</div>
+            <div class="btn-action">MERCY</div>
+        </div>
+
     </div>
 
     <script>
-        const menu = document.getElementById('menu-container');
-        const battleScene = document.getElementById('battle-scene');
-        const startBtn = document.getElementById('start-btn');
-        const attackerImg = document.getElementById('attacker-img');
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        // Basic screen routing to test the flow
+        const menuScreen = document.getElementById('menu-screen');
+        const controlsScreen = document.getElementById('controls-screen');
+        const battleScreen = document.getElementById('battle-screen');
 
-        // State & Transitions
-        startBtn.addEventListener('click', () => {
-            // Browsers require a user interaction (like a click) to trigger Fullscreen API
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
-                });
+        let currentScreen = 'menu';
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+
+            if (currentScreen === 'menu') {
+                if (key === 'z' || key === 'enter') {
+                    // Move to controls when they select start
+                    menuScreen.classList.remove('active');
+                    controlsScreen.classList.add('active');
+                    currentScreen = 'controls';
+                }
+            } 
+            else if (currentScreen === 'controls') {
+                if (key === 'x' || key === 'shift') {
+                    // Back to menu
+                    controlsScreen.classList.remove('active');
+                    menuScreen.classList.add('active');
+                    currentScreen = 'menu';
+                } else if (key === 'z' || key === 'enter') {
+                    // Proceed to battle
+                    controlsScreen.classList.remove('active');
+                    battleScreen.classList.add('active');
+                    currentScreen = 'battle';
+                }
             }
-
-            // Swap displays
-            menu.style.display = 'none';
-            battleScene.style.display = 'flex';
-            attackerImg.style.display = 'block';
-
-            initBattleEngine();
         });
-
-        // Core Battle Engine Setup
-        const player = {
-            x: 400,
-            y: 350,
-            size: 16,
-            color: 'red'
-        };
-
-        const box = {
-            x: 250,
-            y: 200,
-            width: 300,
-            height: 300
-        };
-
-        function drawBox() {
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(box.x, box.y, box.width, box.height);
-        }
-
-        function drawPlayer() {
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
-        }
-
-        function drawBottomUI() {
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 20px Courier New';
-            ctx.fillText("CHARA   LV 19   HP", 150, 550);
-            
-            // HP Bar
-            ctx.fillStyle = 'red';
-            ctx.fillRect(360, 535, 80, 20);
-            ctx.fillStyle = 'yellow';
-            ctx.fillRect(360, 535, 80, 20); 
-            
-            ctx.fillStyle = 'white';
-            ctx.fillText("92 / 92", 460, 550);
-        }
-
-        function gameLoop() {
-            // 1. Clear frame
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 2. Render static elements (Sans is intentionally excluded from rendering queue)
-            drawBox();
-            drawBottomUI();
-            
-            // 3. Render dynamic elements
-            drawPlayer();
-
-            // 4. Attack Sequences would be managed here based on frame counts or timers.
-            // Example: if (currentFrame > 60) { executeGravitySlam(); }
-            
-            requestAnimationFrame(gameLoop);
-        }
-
-        function initBattleEngine() {
-            // Starts the 60fps render loop
-            gameLoop();
-        }
     </script>
 </body>
 </html>
