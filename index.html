@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Undertale: Last Breath Practice</title>
     <style>
-        /* Base Reset & Styling */
-        @font-face {
-            font-family: 'Udtale';
-            /* If you have a specific Undertale font file, link it here. Using monospace as fallback */
-            src: local('Courier New'); 
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
         }
 
         body, html {
@@ -17,223 +17,486 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: black;
-            color: white;
-            font-family: 'Udtale', 'Courier New', Courier, monospace; 
+            background-color: #000;
+            color: #fff;
+            font-family: 'VT323', monospace;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            user-select: none;
         }
 
-        /* --- SCREEN CONTAINERS --- */
-        .screen {
-            display: none;
-            width: 800px;
-            height: 600px;
-            position: relative;
+        /* --- UI OVERLAYS --- */
+        #menu-screen {
+            display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            z-index: 20;
+        }
+
+        h1.title {
+            font-size: 3.5rem;
+            letter-spacing: 3px;
+            margin: 0;
+            text-align: center;
+        }
+
+        .text-red { color: #ff0000; }
+        .text-white { color: #ffffff; }
+
+        .start-btn {
+            background-color: #000;
+            color: #ffff00;
+            border: 3px solid #ffffff;
+            padding: 10px 50px;
+            font-size: 2rem;
+            font-family: 'VT323', monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .start-btn:hover {
+            border-color: #ffff00;
+            box-shadow: 0 0 10px #ffff00;
+        }
+
+        /* --- BATTLE SCREEN --- */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: none;
             justify-content: center;
             align-items: center;
         }
 
-        .active {
-            display: flex;
+        canvas {
+            background-color: #000;
+            display: block;
         }
 
-        /* --- MENU SCREEN --- */
-        #menu-screen h1 {
-            font-size: 2rem;
-            letter-spacing: 2px;
-            margin-bottom: 50px;
-        }
-        
-        .title-red { color: #ff0000; }
-        .title-white { color: #ffffff; }
-
-        .start-btn {
-            border: 2px solid white;
-            padding: 10px 40px;
-            color: #ffff00;
-            font-size: 1.5rem;
-            text-transform: uppercase;
-        }
-
-        /* --- CONTROLS SCREEN --- */
-        #controls-screen {
-            text-align: center;
-            line-height: 2.5;
-        }
-
-        #controls-screen h2 {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            letter-spacing: 2px;
-        }
-
-        .controls-text {
-            font-size: 1.2rem;
-            margin: 10px 0;
-        }
-
-        .controls-subtext {
-            font-size: 1rem;
-            color: #888;
-            margin-top: 40px;
-        }
-
-        /* --- BATTLE SCREEN --- */
-        #battle-screen {
-            justify-content: flex-end;
-            padding-bottom: 30px;
-            box-sizing: border-box;
-        }
-
-        .dialogue-box {
-            width: 90%;
-            height: 150px;
-            border: 4px solid white;
-            margin-bottom: 20px;
-            padding: 20px;
-            box-sizing: border-box;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .stats-row {
-            width: 90%;
-            display: flex;
-            align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            gap: 20px;
-        }
-
-        .hp-bar-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .hp-label { color: white; }
-        .hp-bar-bg {
-            width: 60px;
-            height: 20px;
-            background-color: #ff0000;
-            position: relative;
-        }
-        .hp-bar-fill {
-            width: 100%;
-            height: 100%;
-            background-color: #ffff00;
+        /* Peeking Image */
+        #attacker-img {
             position: absolute;
-            top: 0;
-            left: 0;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 70%;
+            max-width: 300px;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 10;
         }
-
-        .action-buttons {
-            width: 90%;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .btn-action {
-            border: 3px solid #ff9900;
-            color: #ff9900;
-            padding: 10px 0;
-            width: 22%;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .btn-action.active-btn {
-            color: #ffff00;
-            border-color: #ffff00;
-        }
-
     </style>
 </head>
 <body>
 
-    <!-- SCREEN 1: MAIN MENU -->
-    <div id="menu-screen" class="screen active">
-        <h1><span class="title-red">UNDERTALE: LAST BREATH</span> <span class="title-white">PRACTICE</span></h1>
-        <div class="start-btn">START</div>
+    <!-- MAIN MENU -->
+    <div id="menu-screen">
+        <h1 class="title">
+            <span class="text-red">UNDERTALE: LAST BREATH</span> <span class="text-white">PRACTICE</span>
+        </h1>
+        <button id="start-btn" class="start-btn">START</button>
     </div>
 
-    <!-- SCREEN 2: CONTROLS -->
-    <div id="controls-screen" class="screen">
-        <h2>CONTROLS</h2>
-        <div class="controls-text">ARROW KEYS = MOVE / NAVIGATE</div>
-        <div class="controls-text">Z / ENTER = SELECT</div>
-        <div class="controls-text">X / SHIFT = DESELECT / BACK</div>
-        <div class="controls-subtext">(Press X or SHIFT to return)</div>
-    </div>
-
-    <!-- SCREEN 3: BATTLE UI -->
-    <div id="battle-screen" class="screen">
-        
-        <div class="dialogue-box">
-            * Smells like a 90 degree angle.
-        </div>
-
-        <div class="stats-row">
-            <div>PLAYER &nbsp;&nbsp; LV 19</div>
-            <div class="hp-bar-container">
-                <span class="hp-label">HP</span>
-                <div class="hp-bar-bg">
-                    <div class="hp-bar-fill"></div>
-                </div>
-                <span>92 / 92</span>
-            </div>
-        </div>
-
-        <div class="action-buttons">
-            <div class="btn-action active-btn">FIGHT</div>
-            <div class="btn-action">ACT</div>
-            <div class="btn-action">ITEM</div>
-            <div class="btn-action">MERCY</div>
-        </div>
-
+    <!-- GAME CANVAS CONTAINER -->
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <img id="attacker-img" src="Attacker.jpeg" alt="Peeking Attacker">
     </div>
 
     <script>
-        // Basic screen routing to test the flow
+        // DOM Elements
         const menuScreen = document.getElementById('menu-screen');
-        const controlsScreen = document.getElementById('controls-screen');
-        const battleScreen = document.getElementById('battle-screen');
+        const gameContainer = document.getElementById('game-container');
+        const startBtn = document.getElementById('start-btn');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        let currentScreen = 'menu';
-
+        // Input Tracking
+        const keys = {};
         window.addEventListener('keydown', (e) => {
-            const key = e.key.toLowerCase();
-
-            if (currentScreen === 'menu') {
-                if (key === 'z' || key === 'enter') {
-                    // Move to controls when they select start
-                    menuScreen.classList.remove('active');
-                    controlsScreen.classList.add('active');
-                    currentScreen = 'controls';
-                }
-            } 
-            else if (currentScreen === 'controls') {
-                if (key === 'x' || key === 'shift') {
-                    // Back to menu
-                    controlsScreen.classList.remove('active');
-                    menuScreen.classList.add('active');
-                    currentScreen = 'menu';
-                } else if (key === 'z' || key === 'enter') {
-                    // Proceed to battle
-                    controlsScreen.classList.remove('active');
-                    battleScreen.classList.add('active');
-                    currentScreen = 'battle';
-                }
+            keys[e.key] = true;
+            if (e.key === 'z' || e.key === 'Enter') {
+                if (gameState === 'MENU') startGame();
             }
         });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        startBtn.addEventListener('click', startGame);
+
+        function startGame() {
+            // Fullscreen Trigger
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+            menuScreen.style.display = 'none';
+            gameContainer.style.display = 'flex';
+            gameState = 'BATTLE';
+            initAttackEngine();
+        }
+
+        // Engine State
+        let gameState = 'MENU';
+        let frameCount = 0;
+
+        // Player Soul Properties
+        const soul = {
+            x: 400,
+            y: 300,
+            vx: 0,
+            vy: 0,
+            size: 14,
+            speed: 4,
+            isBlue: false,
+            gravity: 0.45,
+            jumpForce: -8.5,
+            onGround: false,
+            color: '#ff0000'
+        };
+
+        let playerHP = 92;
+        let playerMaxHP = 92;
+        let kr = 0;
+
+        // Dynamic Arena Box
+        const box = {
+            x: 260,
+            y: 180,
+            w: 280,
+            h: 240,
+            targetW: 280,
+            targetH: 240,
+            targetX: 260,
+            targetY: 180
+        };
+
+        // Attack Sequence Managers
+        let attackPhase = 0; // 0: Slam1, 1: Corridor, 2: Horizontal Blasters, 3: Circle Blasters, 4: Final Slams
+        let attackTimer = 0;
+        let bones = [];
+        let blasters = [];
+        let spikes = [];
+
+        function initAttackEngine() {
+            frameCount = 0;
+            attackPhase = 0;
+            attackTimer = 0;
+            bones = [];
+            blasters = [];
+            spikes = [];
+            soul.x = 400;
+            soul.y = 300;
+            playerHP = 92;
+        }
+
+        // --- ATTACK SEQUENCES ENGINE ---
+        function updateAttacks() {
+            attackTimer++;
+
+            // PHASE 0: Initial Gravity Slam + Wall Spikes
+            if (attackPhase === 0) {
+                if (attackTimer === 10) slamSoul('down');
+                if (attackTimer === 50) slamSoul('up');
+                if (attackTimer === 90) slamSoul('left');
+                if (attackTimer === 130) {
+                    slamSoul('right');
+                }
+                if (attackTimer > 170) {
+                    // Transition to Bone Tunnel
+                    attackPhase = 1;
+                    attackTimer = 0;
+                    soul.isBlue = true;
+                    box.targetW = 540;
+                    box.targetX = 130;
+                }
+            }
+
+            // PHASE 1: Scrolling Wavy Bone Corridor
+            else if (attackPhase === 1) {
+                if (attackTimer % 18 === 0 && attackTimer < 320) {
+                    const heightGap = 70;
+                    const topH = 40 + Math.sin(attackTimer * 0.08) * 30;
+                    bones.push({ x: box.x + box.w, y: box.y, w: 12, h: topH, speed: 4.5, dir: 'down' });
+                    bones.push({ x: box.x + box.w, y: box.y + topH + heightGap, w: 12, h: box.h - (topH + heightGap), speed: 4.5, dir: 'up' });
+                }
+
+                if (attackTimer > 380) {
+                    attackPhase = 2;
+                    attackTimer = 0;
+                    soul.isBlue = false;
+                    box.targetW = 460;
+                    box.targetH = 140;
+                    box.targetX = 170;
+                    box.targetY = 230;
+                }
+            }
+
+            // PHASE 2: Horizontal Blasters
+            else if (attackPhase === 2) {
+                if (attackTimer % 45 === 0 && attackTimer < 250) {
+                    const laneY = box.y + 30 + (Math.random() > 0.5 ? 0 : 70);
+                    blasters.push({ x: box.x + box.w + 40, y: laneY, targetX: box.x + box.w - 30, state: 0, timer: 0, angle: Math.PI });
+                }
+
+                if (attackTimer > 320) {
+                    attackPhase = 3;
+                    attackTimer = 0;
+                    box.targetW = 260;
+                    box.targetH = 260;
+                    box.targetX = 270;
+                    box.targetY = 170;
+                }
+            }
+
+            // PHASE 3: Rotating Blaster Ring
+            else if (attackPhase === 3) {
+                if (attackTimer === 20) {
+                    const total = 12;
+                    for (let i = 0; i < total; i++) {
+                        const ang = (i / total) * Math.PI * 2;
+                        blasters.push({
+                            cx: 400, cy: 300, radius: 180,
+                            angle: ang, rotSpeed: 0.03, state: 0, timer: 0, isRing: true
+                        });
+                    }
+                }
+
+                if (attackTimer > 300) {
+                    attackPhase = 4;
+                    attackTimer = 0;
+                    blasters = [];
+                }
+            }
+
+            // PHASE 4: Rapid Slams (HP drops down to 1)
+            else if (attackPhase === 4) {
+                if (attackTimer % 20 === 0 && attackTimer < 200) {
+                    const dirs = ['down', 'left', 'right', 'up'];
+                    slamSoul(dirs[Math.floor(Math.random() * dirs.length)]);
+                    if (playerHP > 1) playerHP = Math.max(1, playerHP - 15);
+                }
+            }
+
+            // Update Active Bones
+            for (let i = bones.length - 1; i >= 0; i--) {
+                bones[i].x -= bones[i].speed;
+                // Collision check with soul
+                if (soul.x + soul.size/2 > bones[i].x && soul.x - soul.size/2 < bones[i].x + bones[i].w) {
+                    if (soul.y - soul.size/2 < bones[i].y + bones[i].h && soul.y + soul.size/2 > bones[i].y) {
+                        takeDamage(1);
+                    }
+                }
+                if (bones[i].x < box.x - 30) bones.splice(i, 1);
+            }
+
+            // Update Active Blasters
+            for (let i = blasters.length - 1; i >= 0; i--) {
+                let b = blasters[i];
+                b.timer++;
+
+                if (b.isRing) {
+                    b.angle += b.rotSpeed;
+                    b.x = b.cx + Math.cos(b.angle) * b.radius;
+                    b.y = b.cy + Math.sin(b.angle) * b.radius;
+                    if (b.timer > 40) {
+                        // Draw & test laser beam through center
+                        if (b.timer % 4 === 0 && checkLineCollision(b.x, b.y, b.cx, b.cy, soul.x, soul.y, 16)) {
+                            takeDamage(2);
+                        }
+                    }
+                } else {
+                    if (b.x > b.targetX) b.x -= 8;
+                    if (b.timer > 30 && b.timer < 60) {
+                        // Beam active
+                        if (Math.abs(soul.y - b.y) < 20) takeDamage(2);
+                    }
+                    if (b.timer > 70) blasters.splice(i, 1);
+                }
+            }
+
+            // Update Spikes
+            for (let i = spikes.length - 1; i >= 0; i--) {
+                spikes[i].timer--;
+                if (spikes[i].timer <= 0) spikes.splice(i, 1);
+            }
+        }
+
+        function slamSoul(dir) {
+            spikes = [];
+            if (dir === 'down') {
+                soul.y = box.y + box.h - soul.size/2;
+                spikes.push({ x: box.x, y: box.y + box.h - 15, w: box.w, h: 15, timer: 20 });
+            } else if (dir === 'up') {
+                soul.y = box.y + soul.size/2;
+                spikes.push({ x: box.x, y: box.y, w: box.w, h: 15, timer: 20 });
+            } else if (dir === 'left') {
+                soul.x = box.x + soul.size/2;
+                spikes.push({ x: box.x, y: box.y, w: 15, h: box.h, timer: 20 });
+            } else if (dir === 'right') {
+                soul.x = box.x + box.w - soul.size/2;
+                spikes.push({ x: box.x + box.w - 15, y: box.y, w: 15, h: box.h, timer: 20 });
+            }
+            takeDamage(4);
+        }
+
+        function takeDamage(amt) {
+            if (playerHP > 1) {
+                playerHP = Math.max(1, playerHP - amt);
+            }
+        }
+
+        function checkLineCollision(x1, y1, x2, y2, cx, cy, r) {
+            const dist = Math.abs((y2 - y1) * cx - (x2 - x1) * cy + x2 * y1 - y2 * x1) / Math.hypot(y2 - y1, x2 - x1);
+            return dist < r;
+        }
+
+        // --- PLAYER CONTROLS & PHYSICS ---
+        function updatePlayer() {
+            // Smoothly lerp box size changes
+            box.w += (box.targetW - box.w) * 0.1;
+            box.h += (box.targetH - box.h) * 0.1;
+            box.x += (box.targetX - box.x) * 0.1;
+            box.y += (box.targetY - box.y) * 0.1;
+
+            if (!soul.isBlue) {
+                // RED SOUL: 8-Directional movement
+                soul.color = '#ff0000';
+                if (keys['ArrowLeft']) soul.x -= soul.speed;
+                if (keys['ArrowRight']) soul.x += soul.speed;
+                if (keys['ArrowUp']) soul.y -= soul.speed;
+                if (keys['ArrowDown']) soul.y += soul.speed;
+            } else {
+                // BLUE SOUL: Gravity & Jump physics
+                soul.color = '#0000ff';
+                if (keys['ArrowLeft']) soul.x -= soul.speed;
+                if (keys['ArrowRight']) soul.x += soul.speed;
+
+                soul.vy += soul.gravity;
+                soul.y += soul.vy;
+
+                // Floor collision
+                const floorY = box.y + box.h - soul.size/2;
+                if (soul.y >= floorY) {
+                    soul.y = floorY;
+                    soul.vy = 0;
+                    soul.onGround = true;
+                } else {
+                    soul.onGround = false;
+                }
+
+                // Jump
+                if ((keys['ArrowUp'] || keys['z']) && soul.onGround) {
+                    soul.vy = soul.jumpForce;
+                    soul.onGround = false;
+                }
+            }
+
+            // Keep soul strictly inside arena box bounds
+            const halfS = soul.size / 2;
+            if (soul.x - halfS < box.x) soul.x = box.x + halfS;
+            if (soul.x + halfS > box.x + box.w) soul.x = box.x + box.w - halfS;
+            if (soul.y - halfS < box.y) soul.y = box.y + halfS;
+            if (soul.y + halfS > box.y + box.h) soul.y = box.y + box.h - halfS;
+        }
+
+        // --- RENDER ENGINE ---
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (gameState === 'BATTLE') {
+                // 1. Draw Arena Box
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 5;
+                ctx.strokeRect(box.x, box.y, box.w, box.h);
+
+                // 2. Draw Spikes
+                ctx.fillStyle = '#ffffff';
+                for (let s of spikes) {
+                    ctx.fillRect(s.x, s.y, s.w, s.h);
+                }
+
+                // 3. Draw Bones
+                ctx.fillStyle = '#ffffff';
+                for (let b of bones) {
+                    ctx.fillRect(b.x, b.y, b.w, b.h);
+                }
+
+                // 4. Draw Blasters & Laser Beams
+                for (let b of blasters) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(b.x - 12, b.y - 12, 24, 24);
+
+                    if (b.isRing && b.timer > 40) {
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 12;
+                        ctx.beginPath();
+                        ctx.moveTo(b.x, b.y);
+                        ctx.lineTo(b.cx, b.cy);
+                        ctx.stroke();
+                    } else if (!b.isRing && b.timer > 30) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(box.x, b.y - 10, box.w, 20);
+                    }
+                }
+
+                // 5. Draw Player Soul (Heart shape / square representation)
+                ctx.fillStyle = soul.color;
+                ctx.fillRect(soul.x - soul.size/2, soul.y - soul.size/2, soul.size, soul.size);
+
+                // 6. Draw HUD & Stats Row
+                const hudY = 480;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '22px VT323';
+                ctx.fillText('CHARA   LV 19', 180, hudY);
+                ctx.fillText('HP', 340, hudY);
+
+                // HP Bar
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(370, hudY - 16, 80, 20);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(370, hudY - 16, 80 * (playerHP / playerMaxHP), 20);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(`${playerHP} / ${playerMaxHP}`, 465, hudY);
+
+                // 7. Draw Action Buttons
+                const buttons = ['FIGHT', 'ACT', 'ITEM', 'MERCY'];
+                const btnW = 110;
+                const btnH = 42;
+                const startX = 170;
+                const spacing = 20;
+
+                for (let i = 0; i < buttons.length; i++) {
+                    const bx = startX + i * (btnW + spacing);
+                    ctx.strokeStyle = '#ff9900';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(bx, 515, btnW, btnH);
+
+                    ctx.fillStyle = '#ff9900';
+                    ctx.font = '26px VT323';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(buttons[i], bx + btnW/2, 544);
+                }
+                ctx.textAlign = 'left';
+            }
+        }
+
+        // Main Game Loop
+        function mainLoop() {
+            if (gameState === 'BATTLE') {
+                frameCount++;
+                updatePlayer();
+                updateAttacks();
+            }
+            render();
+            requestAnimationFrame(mainLoop);
+        }
+
+        mainLoop();
     </script>
 </body>
 </html>
