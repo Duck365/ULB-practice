@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Undertale: Last Breath Practice</title>
+    <style>
+        /* Base Reset & Styling */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            color: white;
+            font-family: 'Courier New', Courier, monospace; 
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Menu Screen Configuration */
+        #menu-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .text-red {
+            color: red;
+        }
+
+        .text-white {
+            color: white;
+        }
+
+        /* Simplified Button */
+        #start-btn {
+            background-color: black;
+            color: yellow;
+            border: 2px solid white;
+            padding: 12px 50px;
+            font-size: 1.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: border-color 0.2s;
+        }
+
+        #start-btn:hover {
+            border-color: yellow;
+        }
+
+        /* Battle Scene Configuration */
+        #battle-scene {
+            display: none; 
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: black;
+            /* Scale canvas to fit screen while maintaining aspect ratio */
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Peeking Image Element */
+        #attacker-img {
+            position: absolute;
+            right: -60px; /* Pulls the image partially off-screen */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 250px; 
+            display: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Menu[cite: 2] -->
+    <div id="menu-container">
+        <h1><span class="text-red">Undertale: Last Breath</span> <span class="text-white">Practice</span></h1>
+        <button id="start-btn">Start</button>
+    </div>
+
+    <!-- Battle Execution Screen -->
+    <div id="battle-scene">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <img id="attacker-img" src="Attacker.jpeg" alt="Peeking Attacker">
+    </div>
+
+    <script>
+        const menu = document.getElementById('menu-container');
+        const battleScene = document.getElementById('battle-scene');
+        const startBtn = document.getElementById('start-btn');
+        const attackerImg = document.getElementById('attacker-img');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // State & Transitions
+        startBtn.addEventListener('click', () => {
+            // Browsers require a user interaction (like a click) to trigger Fullscreen API
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            }
+
+            // Swap displays
+            menu.style.display = 'none';
+            battleScene.style.display = 'flex';
+            attackerImg.style.display = 'block';
+
+            initBattleEngine();
+        });
+
+        // Core Battle Engine Setup
+        const player = {
+            x: 400,
+            y: 350,
+            size: 16,
+            color: 'red'
+        };
+
+        const box = {
+            x: 250,
+            y: 200,
+            width: 300,
+            height: 300
+        };
+
+        function drawBox() {
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
+        }
+
+        function drawBottomUI() {
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px Courier New';
+            ctx.fillText("CHARA   LV 19   HP", 150, 550);
+            
+            // HP Bar
+            ctx.fillStyle = 'red';
+            ctx.fillRect(360, 535, 80, 20);
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(360, 535, 80, 20); 
+            
+            ctx.fillStyle = 'white';
+            ctx.fillText("92 / 92", 460, 550);
+        }
+
+        function gameLoop() {
+            // 1. Clear frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Render static elements (Sans is intentionally excluded from rendering queue)
+            drawBox();
+            drawBottomUI();
+            
+            // 3. Render dynamic elements
+            drawPlayer();
+
+            // 4. Attack Sequences would be managed here based on frame counts or timers.
+            // Example: if (currentFrame > 60) { executeGravitySlam(); }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function initBattleEngine() {
+            // Starts the 60fps render loop
+            gameLoop();
+        }
+    </script>
+</body>
+</html>
